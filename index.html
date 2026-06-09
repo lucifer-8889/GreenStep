@@ -1,35 +1,277 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="NirvachAI - Your intelligent guide to understanding the election process. Learn about voting, timelines, and democratic participation through AI-powered conversations and interactive learning." />
-    <meta name="keywords" content="election education, voting guide, democracy, election process, voter awareness, AI assistant, civic education" />
-    <meta name="author" content="NirvachAI Team" />
-    <meta name="theme-color" content="#0a0e1a" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EcoTrack — Track, understand, and reduce your carbon footprint with personalized insights, interactive calculators, and daily eco-challenges.">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="keywords" content="carbon footprint, climate change, sustainability, eco tracker, CO2 calculator, green living">
+  <!-- Security: Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+  <title>EcoTrack — Carbon Footprint Awareness Platform</title>
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="NirvachAI — Election Process Education Assistant" />
-    <meta property="og:description" content="Interactive AI-powered assistant helping citizens understand the election process through conversations, timelines, quizzes, and more." />
-    <meta property="og:type" content="website" />
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
-    <title>NirvachAI — Election Process Education</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <noscript>
-      <div style="text-align:center;padding:3rem;font-family:system-ui,sans-serif;color:#F1F5F9;background:#0a0e1a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <h1>🗳️ NirvachAI</h1>
-        <p>JavaScript is required to run this application. Please enable JavaScript in your browser settings to use NirvachAI.</p>
-        <p>Visit <a href="https://eci.gov.in" style="color:#FF6B35;">eci.gov.in</a> for election information.</p>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/sections.css">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+</head>
+<body>
+
+  <!-- Skip Navigation — Accessibility -->
+  <a href="#main-content" class="skip-nav" id="skip-nav" data-testid="skip-nav">Skip to main content</a>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="navbar__inner">
+      <a href="#" class="navbar__logo" aria-label="EcoTrack Home">
+        <div class="navbar__logo-icon">🌱</div>
+        <span>Eco<span class="text-gradient">Track</span></span>
+      </a>
+
+      <div class="navbar__links" id="navbar-links" role="menubar">
+        <a href="#hero" class="navbar__link active" data-section="hero" role="menuitem" data-testid="nav-home">Home</a>
+        <a href="#calculator" class="navbar__link" data-section="calculator" role="menuitem" data-testid="nav-calculator">Calculator</a>
+        <a href="#dashboard" class="navbar__link" data-section="dashboard" role="menuitem" data-testid="nav-dashboard">Dashboard</a>
+        <a href="#actions" class="navbar__link" data-section="actions" role="menuitem" data-testid="nav-actions">Actions</a>
+        <a href="#challenges" class="navbar__link" data-section="challenges" role="menuitem" data-testid="nav-challenges">Challenges</a>
+        <a href="#education" class="navbar__link" data-section="education" role="menuitem" data-testid="nav-learn">Learn</a>
+        <a href="#pledges" class="navbar__link" data-section="pledges" role="menuitem" data-testid="nav-pledge">Pledge</a>
       </div>
-    </noscript>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+      <button class="navbar__mobile-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navbar-links" data-testid="nav-mobile-toggle">
+        <i data-lucide="menu" style="width:24px;height:24px"></i>
+      </button>
+    </div>
+  </nav>
+
+  <main id="main-content" role="main">
+
+    <!-- ===== HERO ===== -->
+    <section id="hero" class="hero" aria-label="Welcome">
+      <div class="hero__mesh"></div>
+
+      <!-- Floating leaves -->
+      <div class="hero__particles" aria-hidden="true">
+        <span class="hero__leaf" style="left:10%;animation-duration:12s;animation-delay:0s;">🍃</span>
+        <span class="hero__leaf" style="left:25%;animation-duration:15s;animation-delay:2s;">🌿</span>
+        <span class="hero__leaf" style="left:50%;animation-duration:10s;animation-delay:4s;">🍀</span>
+        <span class="hero__leaf" style="left:70%;animation-duration:14s;animation-delay:1s;">🌱</span>
+        <span class="hero__leaf" style="left:85%;animation-duration:11s;animation-delay:3s;">🍃</span>
+        <span class="hero__leaf" style="left:40%;animation-duration:13s;animation-delay:5s;">🌿</span>
+      </div>
+
+      <!-- Globe decoration -->
+      <div class="hero__visual" aria-hidden="true">
+        <div class="hero__globe"></div>
+      </div>
+
+      <div class="container">
+        <div class="hero__content">
+          <div class="hero__badge anim-fade-in">
+            <span class="hero__badge-dot"></span>
+            Carbon Footprint Awareness Platform
+          </div>
+
+          <h1 class="hero__title anim-fade-in-up visible" style="animation-delay:0.1s;">
+            Know Your Impact.<br>
+            <span class="text-gradient">Reduce Your Footprint.</span>
+          </h1>
+
+          <p class="hero__subtitle anim-fade-in-up visible" style="animation-delay:0.2s;">
+            Understand, track, and reduce your carbon emissions through personalized insights,
+            interactive tools, and daily eco-challenges. Every action counts.
+          </p>
+
+          <div class="hero__actions anim-fade-in-up visible" style="animation-delay:0.3s;">
+            <button class="btn btn--primary btn--lg" onclick="window.EcoTrack.navigateTo('calculator')" id="hero-cta-calculate" data-testid="hero-cta-calculate" aria-label="Calculate your carbon footprint">
+              <i data-lucide="calculator" style="width:20px;height:20px" aria-hidden="true"></i>
+              Calculate Your Footprint
+            </button>
+            <button class="btn btn--secondary btn--lg" onclick="window.EcoTrack.navigateTo('education')" id="hero-cta-learn" data-testid="hero-cta-learn" aria-label="Learn more about carbon emissions">
+              <i data-lucide="book-open" style="width:20px;height:20px" aria-hidden="true"></i>
+              Learn More
+            </button>
+          </div>
+
+          <div class="hero__stats anim-fade-in-up visible" style="animation-delay:0.4s;">
+            <div>
+              <div class="hero__stat-value text-gradient">4.7t</div>
+              <div class="hero__stat-label">Global Average / Person</div>
+            </div>
+            <div>
+              <div class="hero__stat-value" style="color:var(--clr-warning-400);">2.1t</div>
+              <div class="hero__stat-label">Paris Agreement Target</div>
+            </div>
+            <div>
+              <div class="hero__stat-value" style="color:var(--clr-danger-400);">36B</div>
+              <div class="hero__stat-label">Tonnes CO₂ / Year</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CALCULATOR ===== -->
+    <section id="calculator" class="calculator py-20" aria-label="Carbon footprint calculator">
+      <div class="container container-sm">
+        <div class="section-header anim-fade-in-up">
+          <span class="section-header__tag">
+            <i data-lucide="calculator" style="width:14px;height:14px"></i>
+            Carbon Calculator
+          </span>
+          <h2 class="section-header__title">Calculate Your <span class="text-gradient">Carbon Footprint</span></h2>
+          <p class="section-header__desc">
+            Answer a few questions about your lifestyle and we'll estimate your annual CO₂ emissions with personalized insights.
+          </p>
+        </div>
+
+        <div id="calculator-wizard" class="calculator__wizard glass-card" role="form" aria-label="Carbon calculator wizard">
+          <!-- Wizard content rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== DASHBOARD ===== -->
+    <section id="dashboard" class="dashboard py-20" aria-label="Personal carbon dashboard">
+      <div class="container">
+        <div class="section-header anim-fade-in-up">
+          <span class="section-header__tag">
+            <i data-lucide="bar-chart-3" style="width:14px;height:14px"></i>
+            Your Dashboard
+          </span>
+          <h2 class="section-header__title">Your Carbon <span class="text-gradient">Dashboard</span></h2>
+          <p class="section-header__desc">
+            Visualize your carbon footprint breakdown, track trends, and see how you compare to national and global averages.
+          </p>
+        </div>
+
+        <div id="dashboard-content">
+          <!-- Dashboard content rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== ACTIONS ===== -->
+    <section id="actions" class="actions py-20" aria-label="Personalized action plan">
+      <div class="container">
+        <div class="section-header anim-fade-in-up">
+          <span class="section-header__tag">
+            <i data-lucide="target" style="width:14px;height:14px"></i>
+            Action Plan
+          </span>
+          <h2 class="section-header__title">Personalized <span class="text-gradient">Action Plan</span></h2>
+          <p class="section-header__desc">
+            Discover impactful actions to reduce your footprint. Each action shows potential CO₂ savings and difficulty level.
+          </p>
+        </div>
+
+        <div id="actions-content">
+          <!-- Actions content rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CHALLENGES ===== -->
+    <section id="challenges" class="challenges py-20" aria-label="Daily eco challenges and achievements">
+      <div class="container">
+        <div class="section-header anim-fade-in-up">
+          <span class="section-header__tag">
+            <i data-lucide="flame" style="width:14px;height:14px"></i>
+            Daily Challenges
+          </span>
+          <h2 class="section-header__title">Daily Eco <span class="text-gradient">Challenges</span></h2>
+          <p class="section-header__desc">
+            Build sustainable habits with daily challenges. Maintain your streak and unlock achievement badges!
+          </p>
+        </div>
+
+        <div id="challenges-content">
+          <!-- Challenges content rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== EDUCATION ===== -->
+    <section id="education" class="education py-20" aria-label="Education and climate facts">
+      <div class="container">
+        <div class="section-header anim-fade-in-up">
+          <span class="section-header__tag">
+            <i data-lucide="book-open" style="width:14px;height:14px"></i>
+            Education Hub
+          </span>
+          <h2 class="section-header__title">Understand Your <span class="text-gradient">Impact</span></h2>
+          <p class="section-header__desc">
+            Learn how everyday choices affect the climate. Explore facts, comparisons, and actionable knowledge.
+          </p>
+        </div>
+
+        <div id="education-content">
+          <!-- Education content rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PLEDGES ===== -->
+    <section id="pledges" class="pledges py-20" aria-label="Green pledge commitments">
+      <div class="container">
+        <div class="section-header anim-fade-in-up">
+          <span class="section-header__tag">
+            <i data-lucide="heart" style="width:14px;height:14px"></i>
+            Green Pledge
+          </span>
+          <h2 class="section-header__title">Make Your <span class="text-gradient">Pledge</span></h2>
+          <p class="section-header__desc">
+            Commit to sustainable habits and track your green pledges. Every commitment brings us closer to a sustainable future.
+          </p>
+        </div>
+
+        <div id="pledges-content">
+          <!-- Pledges content rendered by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer" role="contentinfo">
+      <div class="container">
+        <div class="footer__logo">
+          🌱 Eco<span class="text-gradient">Track</span>
+        </div>
+        <p class="footer__text">
+          Empowering individuals to understand, track, and reduce their carbon footprint through
+          simple actions and personalized insights. Together, we can make a difference.
+        </p>
+        <div class="footer__links">
+          <a href="#calculator" class="footer__link" onclick="event.preventDefault(); window.EcoTrack.navigateTo('calculator');">Calculator</a>
+          <a href="#dashboard" class="footer__link" onclick="event.preventDefault(); window.EcoTrack.navigateTo('dashboard');">Dashboard</a>
+          <a href="#actions" class="footer__link" onclick="event.preventDefault(); window.EcoTrack.navigateTo('actions');">Actions</a>
+          <a href="#challenges" class="footer__link" onclick="event.preventDefault(); window.EcoTrack.navigateTo('challenges');">Challenges</a>
+          <a href="#education" class="footer__link" onclick="event.preventDefault(); window.EcoTrack.navigateTo('education');">Learn</a>
+        </div>
+        <div class="footer__copy">
+          &copy; 2026 EcoTrack — Carbon Footprint Awareness Platform. Built for PromptWars Virtual.
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- App Script -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
 </html>
