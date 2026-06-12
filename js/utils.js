@@ -4,6 +4,7 @@
    =========================== */
 
 /**
+ * @module utils
  * @fileoverview Shared utility functions for sanitization, performance
  * optimization, input validation, and testability across all modules.
  */
@@ -215,4 +216,56 @@ export function trapFocus(container, event) {
     event.preventDefault();
     first.focus();
   }
+}
+
+
+// ─── DOM Creation Helpers ────────────────────────────────────────────
+
+/**
+ * Counter for generating unique IDs across the application.
+ * Avoids collisions in dynamically generated ARIA relationships.
+ * @type {number}
+ */
+let _uniqueIdCounter = 0;
+
+/**
+ * Generates a unique ID string for dynamic DOM elements.
+ * Used to establish ARIA relationships (aria-labelledby, aria-describedby)
+ * between dynamically created elements.
+ *
+ * @param {string} [prefix='eco'] - Prefix for the generated ID
+ * @returns {string} Unique ID string (e.g., 'eco-42')
+ */
+export function generateUniqueId(prefix = 'eco') {
+  _uniqueIdCounter++;
+  return `${prefix}-${_uniqueIdCounter}`;
+}
+
+/**
+ * Creates a DOM element with safe text content (no innerHTML).
+ * Prevents XSS by using textContent instead of innerHTML for
+ * text values. Attributes are set via setAttribute for safety.
+ *
+ * @param {string} tag - HTML tag name
+ * @param {Object} [attrs={}] - Attributes to set on the element
+ * @param {string} [textContent=''] - Safe text content
+ * @returns {HTMLElement} Created element
+ */
+export function createSafeElement(tag, attrs = {}, textContent = '') {
+  const el = document.createElement(tag);
+  Object.entries(attrs).forEach(([key, value]) => {
+    if (key === 'className') {
+      el.className = value;
+    } else if (key === 'style' && typeof value === 'object') {
+      Object.assign(el.style, value);
+    } else if (key.startsWith('data-') || key.startsWith('aria-') || key === 'role' || key === 'id' || key === 'tabindex' || key === 'for' || key === 'type') {
+      el.setAttribute(key, String(value));
+    } else {
+      el.setAttribute(key, String(value));
+    }
+  });
+  if (textContent) {
+    el.textContent = textContent;
+  }
+  return el;
 }

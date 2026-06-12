@@ -1,7 +1,9 @@
 /**
+ * @module storage
  * @fileoverview LocalStorage abstraction layer with CRUD operations for
  * all EcoTrack user state. All data is JSON-serialized and keyed with
- * a namespaced prefix to avoid collisions.
+ * a namespaced prefix to avoid collisions. Includes schema validation
+ * to reject corrupt or tampered data.
  */
 
 /** @enum {string} Storage keys — frozen to prevent accidental mutation */
@@ -56,6 +58,64 @@ function set(key, data) {
   }
 }
 
+// ─── Schema Validation Helpers ───────────────────────────────────────
+
+/** @type {string[]} Expected category keys in a profile */
+const VALID_CATEGORIES = ['transport', 'energy', 'diet', 'shopping', 'waste'];
+
+/**
+ * Validates that a profile object has the expected structure.
+ * Security: prevents injection of malformed or tampered data.
+ *
+ * @param {*} profile - Value to validate
+ * @returns {boolean} true if the profile has a valid schema
+ */
+function isValidProfile(profile) {
+  if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return false;
+  if (typeof profile.total !== 'number' || !Number.isFinite(profile.total)) return false;
+  if (!profile.categories || typeof profile.categories !== 'object') return false;
+  // Ensure each category value is a finite number
+  for (const key of VALID_CATEGORIES) {
+    if (profile.categories[key] !== undefined && (typeof profile.categories[key] !== 'number' || !Number.isFinite(profile.categories[key]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Validates that a pledge object has the expected structure.
+ * @param {*} pledge - Value to validate
+ * @returns {boolean} true if the pledge has a valid schema
+ */
+function isValidPledge(pledge) {
+  if (!pledge || typeof pledge !== 'object') return false;
+  if (typeof pledge.id !== 'string' || pledge.id.length === 0) return false;
+  if (typeof pledge.text !== 'string') return false;
+  if (typeof pledge.savingsKg !== 'number' || !Number.isFinite(pledge.savingsKg)) return false;
+  return true;
+}
+
+/**
+ * Returns the approximate size of all EcoTrack data in localStorage (bytes).
+ * Useful for monitoring storage usage and warning before quota limits.
+ *
+ * @returns {{ usedBytes: number, keys: number }} Storage usage stats
+ */
+export function getStorageUsage() {
+  let usedBytes = 0;
+  let keys = 0;
+  Object.values(KEYS).forEach(key => {
+    const val = localStorage.getItem(key);
+    if (val !== null) {
+      usedBytes += key.length + val.length;
+      keys++;
+    }
+  });
+  // Each char is roughly 2 bytes in UTF-16 localStorage
+  return { usedBytes: usedBytes * 2, keys };
+}
+
 /**
  * Saves a calculator result profile and appends to monthly history.
  * @param {Object} profile - Calculator result
@@ -81,9 +141,15 @@ export function saveProfile(profile) {
   set(KEYS.history, history);
 }
 
-/** @returns {Object|null} Last saved profile or null */
+/** @returns {Object|null} Last saved profile or null if missing/invalid */
 export function getProfile() {
-  return get(KEYS.profile);
+  const profile = get(KEYS.profile);
+  // Security: validate structure before returning
+  if (profile && !isValidProfile(profile)) {
+    console.warn('[EcoTrack] Corrupt profile data detected, returning null.');
+    return null;
+  }
+  return profile;
 }
 
 /** @returns {Array<Object>} Monthly history entries */
@@ -97,6 +163,11 @@ export function getHistory() {
  */
 export function savePledge(pledge) {
   if (!pledge || !pledge.id) return;
+  // Security: validate pledge structure
+  if (!isValidPledge(pledge)) {
+    console.warn('[EcoTrack] Invalid pledge data rejected.');
+    return;
+  }
   const pledges = getPledges();
   if (!pledges.find(p => p.id === pledge.id)) {
     pledges.push({ ...pledge, date: new Date().toISOString() });

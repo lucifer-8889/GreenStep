@@ -1,4 +1,5 @@
 /**
+ * @module pledges
  * @fileoverview Green pledge commitment system. Allows users to commit
  * to sustainable habits and tracks projected CO₂ savings. Dispatches
  * events for cross-module achievement unlocks.
@@ -114,6 +115,12 @@ export function handleTogglePledge(pledgeId) {
   }
 
   renderPledges();
+
+  // Accessibility: return focus to the toggled pledge option
+  requestAnimationFrame(() => {
+    const el = document.getElementById(`pledge-opt-${pledgeId}`);
+    if (el) el.focus();
+  });
 }
 
 /**
@@ -122,6 +129,9 @@ export function handleTogglePledge(pledgeId) {
  */
 export function handleRemovePledge(pledgeId) {
   removePledge(pledgeId);
+  // Dispatch event for consistent analytics/tracking
+  const pledges = getPledges();
+  window.dispatchEvent(new CustomEvent('ecotrack:pledge-removed', { detail: { count: pledges.length } }));
   renderPledges();
   announce('Pledge removed.');
 }

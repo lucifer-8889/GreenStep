@@ -710,6 +710,47 @@ main {
   border-radius: var(--radius-full);
 }
 
+/* Carousel Controls: prev/next arrows + pause/play */
+.education__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.education__arrow-btn {
+  color: var(--clr-text-secondary);
+  border-radius: var(--radius-full);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.education__arrow-btn:hover {
+  color: var(--clr-text-primary);
+  background: var(--clr-bg-tertiary);
+}
+
+.education__pause-btn {
+  color: var(--clr-text-muted);
+  border-radius: var(--radius-full);
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.education__pause-btn:hover {
+  color: var(--clr-text-primary);
+  background: var(--clr-bg-tertiary);
+}
+
 .education__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

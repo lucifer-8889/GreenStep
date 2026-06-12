@@ -1,12 +1,38 @@
 /**
+ * @module data
  * @fileoverview Centralized data layer containing emission factors,
  * calculator questions, action recommendations, challenges, achievements,
  * education content, and pledge options. All exported constants are
- * deeply frozen to prevent accidental runtime mutation.
+ * deeply frozen (recursively) to prevent accidental runtime mutation.
  */
 
-/** @type {Object} Emission factors organized by category (kg CO₂ per unit per year) */
-export const EMISSION_FACTORS = Object.freeze({
+/**
+ * Recursively freezes an object and all its nested objects/arrays.
+ * Prevents accidental mutation at any depth — a stronger guarantee
+ * than Object.freeze() which only freezes the top level.
+ *
+ * @param {Object} obj - Object to deep-freeze
+ * @returns {Object} The same object, now deeply frozen
+ */
+function deepFreeze(obj) {
+  if (obj === null || typeof obj !== 'object') return obj;
+  Object.freeze(obj);
+  Object.getOwnPropertyNames(obj).forEach(prop => {
+    const val = obj[prop];
+    if (val !== null && typeof val === 'object' && !Object.isFrozen(val)) {
+      deepFreeze(val);
+    }
+  });
+  return obj;
+}
+
+/**
+ * Emission factors organized by category (kg CO₂ per unit per year).
+ * Sources: IPCC AR6 (2021), EPA GHG Emission Factors Hub (2024),
+ * IEA Global Energy Review (2023), DEFRA Conversion Factors (2024).
+ * @type {Object}
+ */
+export const EMISSION_FACTORS = deepFreeze({
   transport: {
     // km per week -> annual kg CO₂
     carPetrol: 0.192 * 52,       // 0.192 kg/km * 52 weeks
@@ -55,8 +81,13 @@ export const EMISSION_FACTORS = Object.freeze({
   }
 });
 
-/** @type {Object} National/global CO₂ per-capita averages in tonnes/year */
-export const COUNTRY_AVERAGES = Object.freeze({
+
+/**
+ * National/global CO₂ per-capita averages in tonnes/year.
+ * Source: Global Carbon Project (2023), World Bank Open Data.
+ * @type {Object}
+ */
+export const COUNTRY_AVERAGES = deepFreeze({
   world: 4.7,
   usa: 15.5,
   uk: 5.5,
@@ -75,7 +106,7 @@ export const COUNTRY_AVERAGES = Object.freeze({
 export const PARIS_TARGET = 2.1;
 
 /** @type {Array} Category metadata with colors and emoji */
-export const CATEGORIES = Object.freeze([
+export const CATEGORIES = deepFreeze([
   { id: 'transport', name: 'Transport', emoji: '🚗', color: '#38bdf8' },
   { id: 'energy',    name: 'Home Energy', emoji: '⚡', color: '#f59e0b' },
   { id: 'diet',      name: 'Diet', emoji: '🥩', color: '#ef4444' },
@@ -84,7 +115,7 @@ export const CATEGORIES = Object.freeze([
 ]);
 
 /** @type {Array} Multi-step calculator wizard question definitions */
-export const CALCULATOR_STEPS = Object.freeze([
+export const CALCULATOR_STEPS = deepFreeze([
   {
     id: 'transport',
     title: '🚗 Transportation',
@@ -286,7 +317,7 @@ export const CALCULATOR_STEPS = Object.freeze([
 ]);
 
 /** @type {Array} Curated action recommendations with savings data */
-export const ACTIONS = Object.freeze([
+export const ACTIONS = deepFreeze([
   {
     id: 'bike-commute',
     category: 'transport',
@@ -470,7 +501,7 @@ export const ACTIONS = Object.freeze([
 ]);
 
 /** @type {Array} Pool of daily challenges that rotate by date */
-export const DAILY_CHALLENGES = Object.freeze([
+export const DAILY_CHALLENGES = deepFreeze([
   { id: 'c1', emoji: '🚶', title: 'Walk Instead', desc: 'Walk or bike for at least one trip today instead of driving.', impactKg: 2.5 },
   { id: 'c2', emoji: '🥗', title: 'Meat-Free Day', desc: 'Go entirely plant-based for all meals today.', impactKg: 3.6 },
   { id: 'c3', emoji: '💡', title: 'Lights Out', desc: 'Turn off all unnecessary lights and unplug idle electronics.', impactKg: 1.2 },
@@ -499,7 +530,7 @@ export const DAILY_CHALLENGES = Object.freeze([
 ]);
 
 /** @type {Array} Achievement definitions with tiers and unlock thresholds */
-export const ACHIEVEMENTS = Object.freeze([
+export const ACHIEVEMENTS = deepFreeze([
   { id: 'first-calc', name: 'First Step', emoji: '🌱', desc: 'Complete your first carbon calculation', tier: 'bronze', threshold: 1 },
   { id: 'streak-3', name: 'Eco Warrior', emoji: '🔥', desc: 'Complete 3 daily challenges in a row', tier: 'bronze', threshold: 3 },
   { id: 'streak-7', name: 'Week Champion', emoji: '⭐', desc: '7-day challenge streak', tier: 'silver', threshold: 7 },
@@ -515,7 +546,7 @@ export const ACHIEVEMENTS = Object.freeze([
 ]);
 
 /** @type {Array} Climate facts for the education carousel */
-export const ECO_FACTS = Object.freeze([
+export const ECO_FACTS = deepFreeze([
   { emoji: '🌡️', text: 'The Earth\'s average temperature has risen by 1.1°C since pre-industrial times. We need to limit warming to 1.5°C to avoid the worst impacts.', source: 'IPCC AR6, 2021' },
   { emoji: '✈️', text: 'A single round-trip transatlantic flight generates about 1.6 tonnes of CO₂ — nearly as much as the average person in India produces in an entire year.', source: 'ICAO Carbon Calculator' },
   { emoji: '🥩', text: 'Beef production generates 60 kg of CO₂ per kg of food — that\'s 100x more than peas (0.9 kg CO₂).', source: 'Our World in Data' },
@@ -529,7 +560,7 @@ export const ECO_FACTS = Object.freeze([
 ]);
 
 /** @type {Array} Deep-dive educational comparison cards */
-export const EDU_CARDS = Object.freeze([
+export const EDU_CARDS = deepFreeze([
   {
     icon: '🚗',
     title: 'Transport Impact',
@@ -599,7 +630,7 @@ export const EDU_CARDS = Object.freeze([
 ]);
 
 /** @type {Array} Green pledge commitment options */
-export const PLEDGE_OPTIONS = Object.freeze([
+export const PLEDGE_OPTIONS = deepFreeze([
   { id: 'p-meatless', emoji: '🥬', text: 'Meatless Mondays', savingsKg: 156 },
   { id: 'p-transit', emoji: '🚌', text: 'Public Transit Commute', savingsKg: 900 },
   { id: 'p-reusable', emoji: '🥤', text: 'No Single-Use Plastic', savingsKg: 50 },

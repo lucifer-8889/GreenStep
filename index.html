@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,11 +8,26 @@
   <meta name="keywords" content="carbon footprint, climate change, sustainability, eco tracker, CO2 calculator, green living">
   <!-- Security: Content Security Policy -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+  <!-- Security: Additional HTTP security headers -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <!-- SEO: Open Graph -->
+  <meta property="og:title" content="EcoTrack — Carbon Footprint Awareness Platform">
+  <meta property="og:description" content="Track, understand, and reduce your carbon footprint with personalized insights, interactive calculators, and daily eco-challenges.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <!-- SEO: Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="EcoTrack — Carbon Footprint Awareness Platform">
+  <meta name="twitter:description" content="Track and reduce your carbon footprint with personalized insights and daily eco-challenges.">
   <title>EcoTrack — Carbon Footprint Awareness Platform</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Performance: DNS prefetch for CDN domains -->
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://unpkg.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Chart.js -->
@@ -28,6 +43,20 @@
   <link rel="stylesheet" href="css/sections.css">
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+
+  <!-- SEO: Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "EcoTrack",
+    "description": "Track, understand, and reduce your carbon footprint with personalized insights, interactive calculators, and daily eco-challenges.",
+    "applicationCategory": "EnvironmentApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "browserRequirements": "Requires JavaScript. Modern browser recommended."
+  }
+  </script>
 </head>
 <body>
 
@@ -246,7 +275,7 @@
     </section>
 
     <!-- ===== FOOTER ===== -->
-    <footer class="footer" role="contentinfo">
+    <footer class="footer" role="contentinfo" aria-label="Site footer" data-testid="site-footer">
       <div class="container">
         <div class="footer__logo">
           🌱 Eco<span class="text-gradient">Track</span>

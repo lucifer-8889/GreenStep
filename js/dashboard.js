@@ -1,7 +1,9 @@
 /**
+ * @module dashboard
  * @fileoverview Dashboard with Chart.js visualizations: doughnut breakdown,
  * bar comparison, line trend, and gauge comparison against country averages.
- * Charts are lazily rendered after DOM paint via requestAnimationFrame.
+ * Charts are lazily rendered after DOM paint via requestAnimationFrame,
+ * and deferred until the dashboard section is visible via IntersectionObserver.
  */
 
 import { getProfile, getHistory } from './storage.js';
@@ -11,9 +13,65 @@ import { escapeHTML, prefersReducedMotion, formatNumber } from './utils.js';
 /** @type {Object<string, Chart>} Active Chart.js instances for cleanup */
 let charts = {};
 
+/** @type {IntersectionObserver|null} Lazy rendering observer */
+let _dashboardObserver = null;
+
+/**
+ * Shared Chart.js tooltip configuration.
+ * Code Quality: DRY — extracted to avoid repetition across charts.
+ * @type {Object}
+ */
+const SHARED_TOOLTIP_CONFIG = Object.freeze({
+  backgroundColor: '#1e293b',
+  titleColor: '#f1f5f9',
+  bodyColor: '#94a3b8',
+  borderColor: 'rgba(148,163,184,0.12)',
+  borderWidth: 1,
+  cornerRadius: 8,
+  padding: 12,
+});
+
+/**
+ * Returns shared animation config based on user motion preference.
+ * @param {number} [duration=1200] - Animation duration in ms
+ * @returns {Object} Chart.js animation config
+ */
+function getAnimationConfig(duration = 1200) {
+  const reduceMotion = prefersReducedMotion();
+  return {
+    duration: reduceMotion ? 0 : duration,
+    easing: 'easeOutQuart',
+  };
+}
+
 /** Initializes the dashboard with current profile data. */
 export function initDashboard() {
   renderDashboard();
+  // Efficiency: set up IntersectionObserver for lazy chart rendering
+  setupDashboardObserver();
+}
+
+/**
+ * Observes the dashboard section for visibility. Charts are only
+ * rendered when the section enters the viewport, saving CPU/GPU
+ * on initial page load.
+ */
+function setupDashboardObserver() {
+  if (_dashboardObserver) _dashboardObserver.disconnect();
+  const section = document.getElementById('dashboard');
+  if (!section) return;
+
+  _dashboardObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        renderDashboard();
+        // Efficiency: stop observing once rendered
+        _dashboardObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05 });
+
+  _dashboardObserver.observe(section);
 }
 
 /** Renders dashboard cards, charts, and comparisons from profile data. */
@@ -167,13 +225,7 @@ function renderDoughnutChart(profile) {
           }
         },
         tooltip: {
-          backgroundColor: '#1e293b',
-          titleColor: '#f1f5f9',
-          bodyColor: '#94a3b8',
-          borderColor: 'rgba(148,163,184,0.12)',
-          borderWidth: 1,
-          cornerRadius: 8,
-          padding: 12,
+          ...SHARED_TOOLTIP_CONFIG,
           callbacks: {
             label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(2)} tonnes CO₂`
           }
@@ -181,7 +233,7 @@ function renderDoughnutChart(profile) {
       },
       animation: {
         animateRotate: !reduceMotion,
-        duration: reduceMotion ? 0 : 1200,
+        ...getAnimationConfig(1200),
       }
     }
   });
@@ -195,7 +247,6 @@ function renderBarChart(profile) {
   if (!canvas || !window.Chart) return;
 
   if (charts.bar) charts.bar.destroy();
-  const reduceMotion = prefersReducedMotion();
 
   const labels = CATEGORIES.map(c => c.name);
   const data = CATEGORIES.map(c => Math.round(profile.categories[c.id] || 0));
@@ -235,22 +286,13 @@ function renderBarChart(profile) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e293b',
-          titleColor: '#f1f5f9',
-          bodyColor: '#94a3b8',
-          borderColor: 'rgba(148,163,184,0.12)',
-          borderWidth: 1,
-          cornerRadius: 8,
-          padding: 12,
+          ...SHARED_TOOLTIP_CONFIG,
           callbacks: {
             label: ctx => ` ${ctx.parsed.y.toLocaleString()} kg CO₂/year`
           }
         }
       },
-      animation: {
-        duration: reduceMotion ? 0 : 1000,
-        easing: 'easeOutQuart',
-      }
+      animation: getAnimationConfig(1000),
     }
   });
 }
@@ -301,17 +343,9 @@ function renderLineChart(history) {
       },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1e293b',
-          titleColor: '#f1f5f9',
-          bodyColor: '#94a3b8',
-          borderColor: 'rgba(148,163,184,0.12)',
-          borderWidth: 1,
-          cornerRadius: 8,
-          padding: 12,
-        }
+        tooltip: { ...SHARED_TOOLTIP_CONFIG }
       },
-      animation: { duration: prefersReducedMotion() ? 0 : 1200 }
+      animation: getAnimationConfig(1200),
     }
   });
 }

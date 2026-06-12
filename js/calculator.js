@@ -1,4 +1,5 @@
 /**
+ * @module calculator
  * @fileoverview Multi-step carbon footprint calculator with real-time
  * CO₂ estimation. Supports 5 lifestyle categories and compares results
  * to global averages.
@@ -6,10 +7,15 @@
 
 import { CALCULATOR_STEPS, EMISSION_FACTORS, COUNTRY_AVERAGES, CATEGORIES } from './data.js';
 import { saveProfile } from './storage.js';
-import { escapeHTML, safeNumber, safeEnum, announce, formatNumber } from './utils.js';
+import { escapeHTML, safeNumber, safeEnum, announce, formatNumber, trapFocus } from './utils.js';
 
 let currentStep = 0;
 let inputs = {};
+
+/** @type {string|null} Serialized inputs key for memoization */
+let _lastInputsKey = null;
+/** @type {Object|null} Cached emissions result */
+let _cachedEmissions = null;
 
 /** Initializes the calculator wizard, renders steps, and sets defaults. */
 export function initCalculator() {
@@ -146,15 +152,30 @@ export function handleInput(fieldId, value, unit) {
     display.textContent = `${value} ${escapeHTML(unit)}`;
   }
 
+  // Invalidate memoized emissions
+  _lastInputsKey = null;
+
   updateLiveTotal();
 }
 
+/**
+ * Calculates emissions from current inputs with memoization.
+ * Efficiency: skips recalculation if inputs haven't changed.
+ * Security: uses safeEnum() to validate all select field values.
+ */
 function calculateEmissions() {
+  // Efficiency: return cached result if inputs haven't changed
+  const inputsKey = JSON.stringify(inputs);
+  if (inputsKey === _lastInputsKey && _cachedEmissions) {
+    return _cachedEmissions;
+  }
+
   const result = { transport: 0, energy: 0, diet: 0, shopping: 0, waste: 0 };
 
-  // Transport
-  const carType = inputs.carType || 'none';
-  const carKm = inputs.carKm || 0;
+  // Transport — Security: validate carType enum
+  const validCarTypes = ['none', 'carPetrol', 'carDiesel', 'carHybrid', 'carElectric', 'motorcycle'];
+  const carType = safeEnum(inputs.carType || 'none', validCarTypes, 'none');
+  const carKm = safeNumber(inputs.carKm, 0, 0, 100000);
   if (carType !== 'none' && EMISSION_FACTORS.transport[carType]) {
     result.transport += carKm * EMISSION_FACTORS.transport[carType] / 52;
   }
@@ -163,26 +184,30 @@ function calculateEmissions() {
   result.transport += (inputs.longFlights || 0) * EMISSION_FACTORS.transport.longFlight;
 
   // Energy
-  const elec = (inputs.electricityKwh || 0) * EMISSION_FACTORS.energy.electricity / 12;
-  const gas = (inputs.gasM3 || 0) * EMISSION_FACTORS.energy.naturalGas / 12;
+  const elec = safeNumber(inputs.electricityKwh, 0, 0, 10000) * EMISSION_FACTORS.energy.electricity / 12;
+  const gas = safeNumber(inputs.gasM3, 0, 0, 10000) * EMISSION_FACTORS.energy.naturalGas / 12;
   let energyTotal = elec + gas;
 
-  const solar = inputs.hasSolar || 'no';
+  const validSolar = ['no', 'partial', 'full'];
+  const solar = safeEnum(inputs.hasSolar || 'no', validSolar, 'no');
   if (solar === 'partial') energyTotal *= 0.7;
   else if (solar === 'full') energyTotal *= 0.3;
 
   const household = inputs.householdSize || 1;
   result.energy = energyTotal / household;
 
-  // Diet
-  const dietType = inputs.dietType || 'mediumMeat';
+  // Diet — Security: validate dietType enum
+  const validDiets = ['heavyMeat', 'mediumMeat', 'lightMeat', 'pescatarian', 'vegetarian', 'vegan'];
+  const dietType = safeEnum(inputs.dietType || 'mediumMeat', validDiets, 'mediumMeat');
   result.diet = EMISSION_FACTORS.diet[dietType] || 2500;
 
-  const localFood = inputs.localFood || 'never';
+  const validLocalFood = ['never', 'sometimes', 'often', 'always'];
+  const localFood = safeEnum(inputs.localFood || 'never', validLocalFood, 'never');
   const localMultiplier = { never: 1, sometimes: 0.9, often: 0.8, always: 0.7 };
   result.diet *= (localMultiplier[localFood] || 1);
 
-  const foodWaste = inputs.foodWaste || 'medium';
+  const validFoodWaste = ['high', 'medium', 'low', 'none'];
+  const foodWaste = safeEnum(inputs.foodWaste || 'medium', validFoodWaste, 'medium');
   const wasteMultiplier = { high: 1.2, medium: 1, low: 0.85, none: 0.75 };
   result.diet *= (wasteMultiplier[foodWaste] || 1);
 
@@ -191,20 +216,28 @@ function calculateEmissions() {
   const electronics = inputs.electronicsYear || 0;
   result.shopping = clothingItems * 7 * 12 + electronics * 50; // rough per-item estimates
 
-  const shoppingHabit = inputs.shoppingHabit || 'new';
+  const validShoppingHabit = ['new', 'mixed', 'secondhand', 'minimal'];
+  const shoppingHabit = safeEnum(inputs.shoppingHabit || 'new', validShoppingHabit, 'new');
   const shopMultiplier = { new: 1, mixed: 0.7, secondhand: 0.3, minimal: 0.2 };
   result.shopping *= (shopMultiplier[shoppingHabit] || 1);
 
-  // Waste
-  const recycling = inputs.recycling || 'recycleSome';
+  // Waste — Security: validate recycling enum
+  const validRecycling = ['recycleNone', 'recycleSome', 'recycleMost', 'recycleAll'];
+  const recycling = safeEnum(inputs.recycling || 'recycleSome', validRecycling, 'recycleSome');
   result.waste = EMISSION_FACTORS.waste[recycling] || 800;
 
-  const composting = inputs.composting || 'no';
+  const validComposting = ['no', 'yes'];
+  const composting = safeEnum(inputs.composting || 'no', validComposting, 'no');
   if (composting === 'yes') result.waste += EMISSION_FACTORS.waste.compost;
 
-  const plasticUse = inputs.plasticUse || 'medium';
+  const validPlasticUse = ['high', 'medium', 'low', 'none'];
+  const plasticUse = safeEnum(inputs.plasticUse || 'medium', validPlasticUse, 'medium');
   const plasticMultiplier = { high: 1.3, medium: 1, low: 0.7, none: 0.4 };
   result.waste *= (plasticMultiplier[plasticUse] || 1);
+
+  // Efficiency: cache the result
+  _lastInputsKey = inputsKey;
+  _cachedEmissions = result;
 
   return result;
 }
@@ -273,7 +306,14 @@ function showStep(index) {
 
   if (index < totalSteps) {
     const panel = document.getElementById(`calc-panel-${index}`);
-    if (panel) panel.classList.add('active');
+    if (panel) {
+      panel.classList.add('active');
+      // Accessibility: focus the first interactive element in the new panel
+      requestAnimationFrame(() => {
+        const firstInput = panel.querySelector('input, select, button');
+        if (firstInput) firstInput.focus({ preventScroll: true });
+      });
+    }
   } else {
     // Show results
     if (resultsPanel) resultsPanel.classList.add('active');

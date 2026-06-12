@@ -2,8 +2,8 @@
    EcoTrack Design System
    =========================== */
 
-/* --- Google Fonts Import --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
+/* Note: Google Fonts loaded via <link> in HTML for performance.
+   The @import was removed to eliminate a duplicate render-blocking request. */
 
 /* --- Design Tokens --- */
 :root {
@@ -389,11 +389,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --- Focus Visible (Accessibility) --- */
+/* Enhanced contrast: 3px outline with offset ensures visibility on dark backgrounds */
 :focus-visible {
-  outline: 2px solid var(--clr-primary-400);
-  outline-offset: 2px;
+  outline: 3px solid var(--clr-primary-300);
+  outline-offset: 3px;
 }
-
 /* Remove outline on mouse clicks, keep for keyboard */
 :focus:not(:focus-visible) {
   outline: none;
@@ -410,5 +410,53 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-text-fill-color: unset;
     background: none;
     color: LinkText;
+  }
+}
+
+/* --- Print Styles (Accessibility) --- */
+@media print {
+  .navbar,
+  .skip-nav,
+  .hero__particles,
+  .hero__visual,
+  .hero__mesh,
+  .confetti-container,
+  .toast,
+  .navbar__mobile-toggle {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+    font-size: 12pt;
+  }
+
+  .text-gradient {
+    -webkit-text-fill-color: unset;
+    background: none;
+    color: #047857;
+  }
+
+  .glass-card,
+  .stat-card,
+  .action-card,
+  .edu-card,
+  .challenge-card,
+  .pledge-tile {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  main {
+    padding-top: 0;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
   }
 }

@@ -1,4 +1,5 @@
 /**
+ * @module challenges
  * @fileoverview Daily eco-challenges, streak tracking, and achievement badges
  * with gamification mechanics. Challenges rotate deterministically by date.
  */
@@ -9,6 +10,17 @@ import {
   getUnlockedAchievements, unlockAchievement, getAdoptedActions
 } from './storage.js';
 import { escapeHTML, announce, prefersReducedMotion } from './utils.js';
+
+/**
+ * Announces a newly unlocked achievement to screen readers.
+ * @param {string} achievementId - The ID of the unlocked achievement
+ */
+function announceAchievement(achievementId) {
+  const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
+  if (achievement) {
+    announce(`Achievement unlocked: ${achievement.name}! ${achievement.desc}`, 'assertive');
+  }
+}
 
 /** Initializes challenges and sets up cross-module achievement listeners. */
 export function initChallenges() {
@@ -136,19 +148,17 @@ export function handleCompleteChallenge(challengeId) {
 }
 
 function checkAchievements(streak) {
-  let newUnlock = false;
-
   // Streak achievements
-  if (streak.currentStreak >= 3) newUnlock = unlockAchievement('streak-3') || newUnlock;
-  if (streak.currentStreak >= 7) newUnlock = unlockAchievement('streak-7') || newUnlock;
-  if (streak.currentStreak >= 14) newUnlock = unlockAchievement('streak-14') || newUnlock;
-  if (streak.currentStreak >= 30) newUnlock = unlockAchievement('streak-30') || newUnlock;
+  if (streak.currentStreak >= 3 && unlockAchievement('streak-3')) announceAchievement('streak-3');
+  if (streak.currentStreak >= 7 && unlockAchievement('streak-7')) announceAchievement('streak-7');
+  if (streak.currentStreak >= 14 && unlockAchievement('streak-14')) announceAchievement('streak-14');
+  if (streak.currentStreak >= 30 && unlockAchievement('streak-30')) announceAchievement('streak-30');
 
   // Action achievements
   const adoptedCount = getAdoptedActions().length;
-  if (adoptedCount >= 3) unlockAchievement('actions-3');
-  if (adoptedCount >= 5) unlockAchievement('actions-5');
-  if (adoptedCount >= 10) unlockAchievement('actions-10');
+  if (adoptedCount >= 3 && unlockAchievement('actions-3')) announceAchievement('actions-3');
+  if (adoptedCount >= 5 && unlockAchievement('actions-5')) announceAchievement('actions-5');
+  if (adoptedCount >= 10 && unlockAchievement('actions-10')) announceAchievement('actions-10');
 }
 
 function setupAchievementListeners() {

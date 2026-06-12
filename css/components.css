@@ -305,8 +305,11 @@
 }
 
 .btn--icon.btn--sm {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  /* Accessibility: maintain minimum 44px touch target area with padding */
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* --- Tags / Badges --- */
@@ -502,6 +505,9 @@
   background: var(--clr-bg-tertiary);
   border-radius: var(--radius-full);
   outline: none;
+  /* Accessibility: ensure 44px touch target for the track */
+  padding: 10px 0;
+  background-clip: content-box;
 }
 
 .range-slider::-webkit-slider-thumb {
@@ -528,6 +534,13 @@
   cursor: pointer;
   border: none;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Active track styling (Firefox) */
+.range-slider::-moz-range-progress {
+  background: var(--grad-primary);
+  height: 6px;
+  border-radius: var(--radius-full);
 }
 
 /* --- Radio Group --- */

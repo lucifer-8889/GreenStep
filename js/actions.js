@@ -1,4 +1,5 @@
 /**
+ * @module actions
  * @fileoverview Personalized action plan with category filtering,
  * adoption tracking, and projected CO₂ savings calculation.
  */
@@ -21,7 +22,10 @@ export function renderActions() {
   const profile = getProfile();
   const adopted = getAdoptedActions();
 
-  // Sort actions: prioritize categories where user emits most
+  // Sorting strategy: prioritize actions in the user's highest-emission
+  // categories first. This ensures the most impactful recommendations
+  // appear at the top. catRank orders categories by emission (descending),
+  // then we sort actions by their category's rank position.
   let sortedActions = [...ACTIONS];
   if (profile) {
     const catRank = Object.entries(profile.categories)
@@ -136,7 +140,12 @@ function renderActionCard(action, isAdopted) {
 export function filterActions(category) {
   currentFilter = category;
   renderActions();
-  announce(`Showing ${category === 'all' ? 'all' : category} actions`);
+  // Accessibility: announce filter change with result count
+  const count = category === 'all'
+    ? ACTIONS.length
+    : ACTIONS.filter(a => a.category === category).length;
+  const label = category === 'all' ? 'all' : category;
+  announce(`Showing ${count} ${label} action${count !== 1 ? 's' : ''}`);
 }
 
 /**

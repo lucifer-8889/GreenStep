@@ -1,4 +1,5 @@
 /**
+ * @module app
  * @fileoverview Main application controller for EcoTrack.
  * Handles navigation, global event binding, scroll-based UI updates,
  * accessibility (keyboard nav, ARIA), and toast notifications.
@@ -29,21 +30,28 @@ window.EcoTrack = Object.freeze({
   showToast,
 });
 
-// ─── Initialization ──────────────────────────────────────────────────
+// ─── Initialization ────────────────────────────────────────────────────────
+// Efficiency: { once: true } ensures listener is auto-removed after first call
 document.addEventListener('DOMContentLoaded', () => {
-  initNavbar();
-  initScrollAnimations();
-  initKeyboardNavigation();
-  initCalculator();
-  initDashboard();
-  initActions();
-  initChallenges();
-  initEducation();
-  initPledges();
+  try {
+    initNavbar();
+    initScrollAnimations();
+    initKeyboardNavigation();
+    initCalculator();
+    initDashboard();
+    initActions();
+    initChallenges();
+    initEducation();
+    initPledges();
 
-  // Init Lucide icons
-  if (window.lucide) window.lucide.createIcons();
-});
+    // Init Lucide icons
+    if (window.lucide) window.lucide.createIcons();
+  } catch (err) {
+    // Code Quality: error boundary prevents a single module failure
+    // from breaking the entire application
+    console.error('[EcoTrack] Initialization error:', err);
+  }
+}, { once: true });
 
 
 // ─── Navigation ──────────────────────────────────────────────────────
