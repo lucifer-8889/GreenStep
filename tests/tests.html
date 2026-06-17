@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="EcoTrack Test Runner — Automated unit and integration tests">
+  <title>EcoTrack — Test Suite</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --clr-bg:          #080e1a;
+      --clr-surface:     #0e1825;
+      --clr-surface-2:   #131f30;
+      --clr-border:      rgba(99,194,124,0.12);
+      --clr-pass:        #34d979;
+      --clr-fail:        #f7594e;
+      --clr-warn:        #f59e0b;
+      --clr-primary:     #63c27c;
+      --clr-text:        #e2e8f0;
+      --clr-text-muted:  #64748b;
+      --clr-text-dim:    #94a3b8;
+      --font-sans:       'Inter', system-ui, sans-serif;
+      --font-mono:       'JetBrains Mono', 'Fira Code', monospace;
+      --radius-sm:       6px;
+      --radius-md:       10px;
+      --radius-lg:       14px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--clr-bg);
+      color: var(--clr-text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    .test-header {
+      background: linear-gradient(135deg, #0e1825 0%, #0d1f14 100%);
+      border-bottom: 1px solid var(--clr-border);
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .test-header__logo {
+      font-size: 28px;
+    }
+
+    .test-header__title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .test-header__title span {
+      background: linear-gradient(135deg, #63c27c, #34d979);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .test-header__sub {
+      font-size: 13px;
+      color: var(--clr-text-muted);
+      margin-top: 2px;
+    }
+
+    .test-header__actions {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-run {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .btn-run:hover { opacity: 0.88; }
+    .btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Score Bar ── */
+    .score-bar {
+      background: var(--clr-surface);
+      padding: 24px 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      border-bottom: 1px solid var(--clr-border);
+    }
+
+    .score-card {
+      background: var(--clr-surface-2);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      text-align: center;
+    }
+
+    .score-card__label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--clr-text-muted);
+      margin-bottom: 6px;
+    }
+
+    .score-card__value {
+      font-size: 32px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+    }
+
+    .score-card__value.pass { color: var(--clr-pass); }
+    .score-card__value.fail { color: var(--clr-fail); }
+    .score-card__value.total { color: var(--clr-text); }
+    .score-card__value.pct { color: var(--clr-warn); }
+
+    /* ── Progress Bar ── */
+    .progress-bar-wrap {
+      padding: 0 32px 24px;
+      background: var(--clr-surface);
+      border-bottom: 1px solid var(--clr-border);
+    }
+
+    .progress-bar-bg {
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #22c55e, #34d979);
+      transition: width 0.6s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+
+    /* ── Suite Grid ── */
+    .suites {
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .suite {
+      background: var(--clr-surface);
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .suite.pass { border-color: rgba(52,217,121,0.25); }
+    .suite.fail { border-color: rgba(247,89,78,0.3); }
+
+    .suite__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .suite__header:hover { background: rgba(255,255,255,0.02); }
+
+    .suite__icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .suite__icon.pass { background: rgba(52,217,121,0.15); color: var(--clr-pass); }
+    .suite__icon.fail { background: rgba(247,89,78,0.15); color: var(--clr-fail); }
+
+    .suite__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--clr-text);
+      flex: 1;
+    }
+
+    .suite__count {
+      font-size: 12px;
+      color: var(--clr-text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .suite__chevron {
+      font-size: 12px;
+      color: var(--clr-text-muted);
+      transition: transform 0.2s;
+    }
+
+    .suite__chevron.open { transform: rotate(90deg); }
+
+    .suite__tests {
+      display: none;
+      padding: 0 18px 14px;
+      border-top: 1px solid var(--clr-border);
+      background: var(--clr-bg);
+    }
+
+    .suite__tests.open { display: block; }
+
+    .test-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+    }
+
+    .test-row:last-child { border-bottom: none; }
+
+    .test-row__dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .test-row__dot.pass { background: var(--clr-pass); }
+    .test-row__dot.fail { background: var(--clr-fail); }
+
+    .test-row__name { flex: 1; color: var(--clr-text-dim); }
+    .test-row__name.fail { color: var(--clr-fail); }
+
+    .test-row__detail {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--clr-text-muted);
+      max-width: 260px;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--clr-surface);
+      border-top: 1px solid var(--clr-border);
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--clr-text-muted);
+      z-index: 100;
+    }
+
+    .status-bar__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--clr-text-muted);
+      animation: pulse 1.4s infinite;
+    }
+
+    .status-bar__dot.done.pass { background: var(--clr-pass); animation: none; }
+    .status-bar__dot.done.fail { background: var(--clr-fail); animation: none; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .status-bar__spacer { flex: 1; }
+
+    .status-bar__time {
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    /* ── Skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg, var(--clr-surface) 25%, var(--clr-surface-2) 50%, var(--clr-surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: var(--radius-sm);
+      height: 18px;
+      margin: 8px 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .test-header, .score-bar, .suites, .progress-bar-wrap { padding-left: 16px; padding-right: 16px; }
+      .score-bar { grid-template-columns: 1fr 1fr; }
+    }
+
+    #spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="test-header" role="banner">
+    <div class="test-header__logo">🌱</div>
+    <div>
+      <div class="test-header__title">Eco<span>Track</span> — Test Suite</div>
+      <div class="test-header__sub">Unit · Integration · Security · Accessibility contracts</div>
+    </div>
+    <div class="test-header__actions">
+      <button class="btn-run" id="run-btn" onclick="runTests()" aria-label="Run all tests">
+        <div id="spinner"></div>
+        ▶ Run Tests
+      </button>
+    </div>
+  </header>
+
+  <!-- Score Cards -->
+  <section class="score-bar" aria-label="Test results summary" role="region">
+    <div class="score-card">
+      <div class="score-card__label">Total Tests</div>
+      <div class="score-card__value total" id="stat-total">—</div>
+    </div>
+    <div class="score-card">
+      <div class="score-card__label">Passed</div>
+      <div class="score-card__value pass" id="stat-pass">—</div>
+    </div>
+    <div class="score-card">
+      <div class="score-card__label">Failed</div>
+      <div class="score-card__value fail" id="stat-fail">—</div>
+    </div>
+    <div class="score-card">
+      <div class="score-card__label">Pass Rate</div>
+      <div class="score-card__value pct" id="stat-pct">—</div>
+    </div>
+    <div class="score-card">
+      <div class="score-card__label">Suites</div>
+      <div class="score-card__value total" id="stat-suites">—</div>
+    </div>
+    <div class="score-card">
+      <div class="score-card__label">Duration</div>
+      <div class="score-card__value total" id="stat-time">—</div>
+    </div>
+  </section>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-bg" role="progressbar" aria-label="Test pass rate"
+         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-outer">
+      <div class="progress-bar-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- Suite Results -->
+  <main id="suites-container" class="suites" role="main" aria-label="Test suites">
+    <div style="color:var(--clr-text-muted); font-size:14px; text-align:center; padding: 40px 0;">
+      Click <strong style="color:var(--clr-pass)">▶ Run Tests</strong> to execute the full test suite.
+    </div>
+  </main>
+
+  <!-- Status Bar -->
+  <footer class="status-bar" role="status" aria-live="polite">
+    <div class="status-bar__dot" id="status-dot"></div>
+    <span id="status-text">Idle — press Run Tests to begin</span>
+    <div class="status-bar__spacer"></div>
+    <span class="status-bar__time" id="status-time"></span>
+  </footer>
+
+  <script type="module">
+    import { summary } from './ecotrack.test.js';
+
+    const $ = id => document.getElementById(id);
+
+    window.runTests = async function () {
+      const btn     = $('run-btn');
+      const spinner = $('spinner');
+
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      $('status-dot').className = 'status-bar__dot';
+      $('status-text').textContent = 'Running tests…';
+
+      // Render skeleton placeholders
+      $('suites-container').innerHTML = Array.from({ length: 6 }, () => `
+        <div class="suite">
+          <div class="suite__header">
+            <div class="skeleton" style="width:20px;height:20px;border-radius:50%;flex-shrink:0"></div>
+            <div class="skeleton" style="flex:1"></div>
+          </div>
+        </div>
+      `).join('');
+
+      const t0 = performance.now();
+
+      // The test module already ran all describe() calls at import time (top-level await).
+      // summary() returns the accumulated results.
+      await new Promise(r => setTimeout(r, 50)); // allow microtask queue to flush
+      const { passed, failed, total, results } = summary();
+      const duration = ((performance.now() - t0) / 1000).toFixed(2);
+
+      // ── Update Scorecards ──
+      $('stat-total').textContent  = total;
+      $('stat-pass').textContent   = passed;
+      $('stat-fail').textContent   = failed;
+      const pct = total > 0 ? Math.round((passed / total) * 100) : 0;
+      $('stat-pct').textContent    = pct + '%';
+      $('stat-pct').style.color    = pct === 100 ? 'var(--clr-pass)' : pct >= 80 ? 'var(--clr-warn)' : 'var(--clr-fail)';
+      $('stat-time').textContent   = duration + 's';
+
+      // ── Progress Bar ──
+      const fill = $('progress-fill');
+      const outer = $('progress-outer');
+      fill.style.width = pct + '%';
+      fill.style.background = pct === 100
+        ? 'linear-gradient(90deg, #22c55e, #34d979)'
+        : pct >= 80
+          ? 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+          : 'linear-gradient(90deg, #ef4444, #f87171)';
+      outer.setAttribute('aria-valuenow', pct);
+
+      // ── Group by suite ──
+      const suites = {};
+      results.forEach(r => {
+        if (!suites[r.suite]) suites[r.suite] = { pass: 0, fail: 0, tests: [] };
+        if (r.ok) suites[r.suite].pass++;
+        else suites[r.suite].fail++;
+        suites[r.suite].tests.push(r);
+      });
+
+      const suiteNames = Object.keys(suites);
+      $('stat-suites').textContent = suiteNames.length;
+
+      // ── Render Suites ──
+      let suiteIdx = 0;
+      $('suites-container').innerHTML = suiteNames.map(name => {
+        const s = suites[name];
+        const allPass = s.fail === 0;
+        const idx = suiteIdx++;
+        const statusIcon = allPass ? '✓' : '✗';
+        const statusClass = allPass ? 'pass' : 'fail';
+
+        const tests = s.tests.map(t => `
+          <div class="test-row" role="listitem">
+            <div class="test-row__dot ${t.ok ? 'pass' : 'fail'}"></div>
+            <div class="test-row__name ${t.ok ? '' : 'fail'}">${escapeHtml(t.test)}</div>
+            ${!t.ok ? `<div class="test-row__detail">${escapeHtml(t.message)}</div>` : ''}
+          </div>
+        `).join('');
+
+        return `
+          <div class="suite ${statusClass}" id="suite-${idx}">
+            <div class="suite__header" onclick="toggleSuite(${idx})" 
+                 role="button" aria-expanded="false"
+                 aria-controls="suite-tests-${idx}"
+                 tabindex="0"
+                 onkeydown="if(event.key==='Enter'||event.key===' ')toggleSuite(${idx})">
+              <div class="suite__icon ${statusClass}">${statusIcon}</div>
+              <div class="suite__name">${escapeHtml(name)}</div>
+              <div class="suite__count">${s.pass}/${s.pass + s.fail} passed</div>
+              <div class="suite__chevron" id="chevron-${idx}">›</div>
+            </div>
+            <div class="suite__tests ${allPass ? '' : 'open'}" id="suite-tests-${idx}" role="list">
+              ${tests}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Auto-expand failed suites already done above; update chevrons
+      suiteNames.forEach((_, idx) => {
+        const testsEl = $(`suite-tests-${idx}`);
+        const chevron = $(`chevron-${idx}`);
+        if (testsEl && testsEl.classList.contains('open')) {
+          chevron && chevron.classList.add('open');
+          $(`suite-${idx}`)
+            ?.querySelector('.suite__header')
+            ?.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      // ── Status Bar ──
+      const dotEl = $('status-dot');
+      dotEl.className = `status-bar__dot done ${failed === 0 ? 'pass' : 'fail'}`;
+      $('status-text').textContent = failed === 0
+        ? `✅ All ${total} tests passed!`
+        : `❌ ${failed} test${failed !== 1 ? 's' : ''} failed — ${passed} passed`;
+      $('status-time').textContent = `Completed in ${duration}s`;
+
+      btn.disabled = false;
+      spinner.style.display = 'none';
+    };
+
+    window.toggleSuite = function(idx) {
+      const testsEl = document.getElementById(`suite-tests-${idx}`);
+      const chevron = document.getElementById(`chevron-${idx}`);
+      const header  = document.querySelector(`#suite-${idx} .suite__header`);
+      if (!testsEl) return;
+      const isOpen = testsEl.classList.toggle('open');
+      chevron?.classList.toggle('open', isOpen);
+      header?.setAttribute('aria-expanded', String(isOpen));
+    };
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Auto-run on page load
+    window.addEventListener('load', () => window.runTests());
+  </script>
+</body>
+</html>

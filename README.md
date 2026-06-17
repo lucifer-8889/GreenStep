@@ -49,6 +49,50 @@ You just need a modern web browser and a local development server to handle ES6 
 3.  **Open the application:**
     Navigate to `http://localhost:5500` (or the port provided by your server) in your web browser.
 
+## 🧪 Testing
+
+EcoTrack includes a comprehensive in-browser test suite covering all core modules with **no npm build step required**.
+
+### Test Files
+
+| File | Purpose |
+|------|---------|
+| `tests/ecotrack.test.js` | Full unit & integration test suite (ES module) |
+| `tests/tests.html` | Visual in-browser test runner UI |
+| `tests/e2e-selectors.js` | E2E selector contract & `sel()` helper |
+
+### Test Coverage
+
+| Area | What is tested |
+|------|---------------|
+| **utils.js** | `escapeHTML` (XSS prevention), `safeNumber`, `safeEnum`, `debounce`, `throttle`, `formatNumber`, `formatDate`, `generateUniqueId`, `createSafeElement`, `testId` |
+| **storage.js** | Profile save/load & schema validation, monthly history upsert, pledge CRUD & validation, `toggleAction`, streak & challenge logic, achievements, `exportData`/`importData`, `getStorageUsage`, `clearAll` |
+| **Calculator Logic** | Emission factors validity, vegan < heavy-meat diet, electric < petrol car, long > short flight, recycleAll < recycleNone, formula sanity check |
+| **Actions Data** | Structure integrity, no duplicate IDs, savings accumulation |
+| **Categories Data** | 5 correct categories, all required fields, hex colors |
+| **e2e-selectors** | Object is frozen, all sections present, no duplicate selector values, `sel()` output format |
+| **Security** | XSS payload battery through `escapeHTML`, corrupt localStorage data rejection |
+
+### Running the Tests
+
+The test runner requires ES modules to be served over HTTP (not `file://`).
+
+1. Start a local server from the project root:
+   ```bash
+   npx http-server ./ -p 5500 -c-1 --cors
+   ```
+
+2. Navigate to the test runner in your browser:
+   ```
+   http://localhost:5500/tests/tests.html
+   ```
+
+3. Tests auto-run on page load. Click **▶ Run Tests** to re-run at any time.
+
+The runner displays a live **pass rate**, per-suite collapsible results, and highlights all failing assertions.
+
+---
+
 ## 🛡️ Security & Accessibility
 
 EcoTrack has been hardened against the 5 key criteria:
