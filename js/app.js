@@ -198,7 +198,7 @@ function initKeyboardNavigation() {
 function initScrollAnimations() {
   // Accessibility: skip animations if user prefers reduced motion
   if (prefersReducedMotion()) {
-    document.querySelectorAll('.anim-fade-in-up, .anim-fade-in-left, .anim-fade-in-right, .anim-scale-in').forEach(el => {
+    document.querySelectorAll('.anim-fade-in-up, .anim-fade-in-left, .anim-fade-in-right, .anim-scale-in, .reveal').forEach(el => {
       el.classList.add('visible');
     });
     return;
@@ -217,7 +217,7 @@ function initScrollAnimations() {
     rootMargin: '0px 0px -50px 0px'
   });
 
-  document.querySelectorAll('.anim-fade-in-up, .anim-fade-in-left, .anim-fade-in-right, .anim-scale-in').forEach(el => {
+  document.querySelectorAll('.anim-fade-in-up, .anim-fade-in-left, .anim-fade-in-right, .anim-scale-in, .reveal').forEach(el => {
     observer.observe(el);
   });
 }

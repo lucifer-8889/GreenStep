@@ -5,7 +5,7 @@
  * to global averages.
  */
 
-import { CALCULATOR_STEPS, EMISSION_FACTORS, COUNTRY_AVERAGES, CATEGORIES } from './data.js';
+import { CALCULATOR_STEPS, EMISSION_FACTORS, COUNTRY_AVERAGES, CATEGORIES, TREE_ABSORPTION } from './data.js';
 import { saveProfile } from './storage.js';
 import { escapeHTML, safeNumber, safeEnum, announce, formatNumber, trapFocus } from './utils.js';
 
@@ -25,6 +25,10 @@ export function initCalculator() {
   updateLiveTotal();
 }
 
+/**
+ * Renders the full calculator wizard UI: progress dots, step panels,
+ * navigation buttons, and live total display.
+ */
 function renderWizard() {
   const wizard = document.getElementById('calculator-wizard');
   if (!wizard) return;
@@ -256,6 +260,10 @@ function updateLiveTotal() {
   if (progress) progress.setAttribute('aria-valuenow', String(currentStep + 1));
 }
 
+/**
+ * Updates the progress dots, step labels, connector lines, and
+ * button states to reflect the current wizard step.
+ */
 function updateProgress() {
   const totalSteps = CALCULATOR_STEPS.length;
 
@@ -293,6 +301,11 @@ function updateProgress() {
   }
 }
 
+/**
+ * Shows a specific step panel and hides all others. When the index
+ * exceeds the number of steps, the results panel is displayed.
+ * @param {number} index - Zero-based step index to display
+ */
 function showStep(index) {
   const totalSteps = CALCULATOR_STEPS.length;
 
@@ -321,11 +334,16 @@ function showStep(index) {
   }
 }
 
+/**
+ * Renders the final results panel with total emissions, category breakdown,
+ * country comparison, tree offset estimate, and navigation buttons.
+ * Saves the profile and dispatches the calc-complete event.
+ */
 function showResults() {
   const emissions = calculateEmissions();
   const total = Object.values(emissions).reduce((sum, v) => sum + v, 0);
   const tonnes = (total / 1000).toFixed(1);
-  const trees = Math.ceil(total / 22);
+  const trees = Math.ceil(total / TREE_ABSORPTION);
 
   // Save profile
   saveProfile({

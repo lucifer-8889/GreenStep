@@ -297,6 +297,11 @@ function renderBarChart(profile) {
   });
 }
 
+/**
+ * Renders the monthly trend line chart from historical data.
+ * Efficiency: destroys previous instance to prevent memory leaks.
+ * @param {Array<{ month: string, total: number }>} history - Monthly history entries
+ */
 function renderLineChart(history) {
   const canvas = document.getElementById('chart-line');
   if (!canvas || !window.Chart) return;
@@ -351,8 +356,9 @@ function renderLineChart(history) {
 }
 
 /**
- * Renders the comparison gauge showing user vs. country averages.
+ * Renders the comparison gauge showing user emissions vs. country averages.
  * Uses inline bar visualizations for each benchmark.
+ * @param {number} totalKg - User's total annual emissions in kilograms
  */
 function renderGauge(totalKg) {
   const container = document.getElementById('comparison-gauge');

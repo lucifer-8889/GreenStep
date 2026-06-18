@@ -189,7 +189,11 @@ export function getPledges() {
   return get(KEYS.pledges) || [];
 }
 
-// --- Streak & Challenges ---
+/**
+ * Retrieves streak tracking data from localStorage.
+ * Returns default values if no data exists.
+ * @returns {{ currentStreak: number, longestStreak: number, lastDate: string|null, totalCompleted: number }}
+ */
 export function getStreakData() {
   return get(KEYS.streak) || {
     currentStreak: 0,
@@ -199,7 +203,18 @@ export function getStreakData() {
   };
 }
 
+/**
+ * Records a completed challenge, updates the streak, and logs the event.
+ * Security: validates challengeId is a non-empty string.
+ * @param {string} challengeId - Identifier for the completed challenge
+ * @returns {{ currentStreak: number, longestStreak: number, lastDate: string, totalCompleted: number }}
+ */
 export function completeChallenge(challengeId) {
+  if (typeof challengeId !== 'string' || challengeId.length === 0) {
+    console.warn('[EcoTrack] Invalid challengeId rejected.');
+    return getStreakData();
+  }
+
   const streak = getStreakData();
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -229,21 +244,37 @@ export function completeChallenge(challengeId) {
   return streak;
 }
 
+/**
+ * Retrieves the full challenge completion log.
+ * @returns {Array<{ id: string, date: string }>} Logged challenge completions
+ */
 export function getChallengeLog() {
   return get(KEYS.challengeLog) || [];
 }
 
+/**
+ * Checks whether a challenge has been completed today.
+ * @returns {boolean} true if a challenge was completed today
+ */
 export function isChallengeCompletedToday() {
   const streak = getStreakData();
   const today = new Date().toISOString().slice(0, 10);
   return streak.lastDate === today;
 }
 
-// --- Adopted Actions ---
+/**
+ * Retrieves the list of adopted action IDs.
+ * @returns {string[]} Array of adopted action identifiers
+ */
 export function getAdoptedActions() {
   return get(KEYS.adoptedActions) || [];
 }
 
+/**
+ * Toggles an action's adoption state (add/remove from adopted list).
+ * @param {string} actionId - Action identifier to toggle
+ * @returns {string[]} Updated list of adopted action IDs
+ */
 export function toggleAction(actionId) {
   const adopted = getAdoptedActions();
   const idx = adopted.indexOf(actionId);
@@ -256,11 +287,19 @@ export function toggleAction(actionId) {
   return adopted;
 }
 
-// --- Achievements ---
+/**
+ * Retrieves the list of unlocked achievement IDs.
+ * @returns {string[]} Array of unlocked achievement identifiers
+ */
 export function getUnlockedAchievements() {
   return get(KEYS.achievements) || [];
 }
 
+/**
+ * Unlocks an achievement by ID if not already unlocked.
+ * @param {string} achievementId - Achievement identifier
+ * @returns {boolean} true if newly unlocked, false if already existed
+ */
 export function unlockAchievement(achievementId) {
   const unlocked = getUnlockedAchievements();
   if (!unlocked.includes(achievementId)) {

@@ -51,13 +51,24 @@ You just need a modern web browser and a local development server to handle ES6 
 
 ## 🧪 Testing
 
-EcoTrack includes a comprehensive in-browser test suite covering all core modules with **no npm build step required**.
+EcoTrack includes a comprehensive test suite covering all core modules, available in both **CLI** and **in-browser** formats.
+
+### Quick Start (CLI)
+
+```bash
+npm install
+npm test
+```
 
 ### Test Files
 
 | File | Purpose |
 |------|---------|
-| `tests/ecotrack.test.js` | Full unit & integration test suite (ES module) |
+| `tests/unit/utils.test.js` | Unit tests for all utility functions (Vitest) |
+| `tests/unit/storage.test.js` | Unit tests for localStorage CRUD & validation (Vitest) |
+| `tests/unit/data.test.js` | Data integrity, emission factor correctness, and immutability (Vitest) |
+| `tests/unit/e2e-selectors.test.js` | E2E selector contract completeness (Vitest) |
+| `tests/ecotrack.test.js` | Full in-browser test suite (ES module, custom runner) |
 | `tests/tests.html` | Visual in-browser test runner UI |
 | `tests/e2e-selectors.js` | E2E selector contract & `sel()` helper |
 
@@ -67,15 +78,23 @@ EcoTrack includes a comprehensive in-browser test suite covering all core module
 |------|---------------|
 | **utils.js** | `escapeHTML` (XSS prevention), `safeNumber`, `safeEnum`, `debounce`, `throttle`, `formatNumber`, `formatDate`, `generateUniqueId`, `createSafeElement`, `testId` |
 | **storage.js** | Profile save/load & schema validation, monthly history upsert, pledge CRUD & validation, `toggleAction`, streak & challenge logic, achievements, `exportData`/`importData`, `getStorageUsage`, `clearAll` |
-| **Calculator Logic** | Emission factors validity, vegan < heavy-meat diet, electric < petrol car, long > short flight, recycleAll < recycleNone, formula sanity check |
+| **data.js** | Emission factors validity, diet/transport/flight/waste ordering, formula sanity checks, ACTIONS & CATEGORIES structure, data immutability (deep freeze), `relatableUnits` |
+| **Calculator Logic** | Emission factor correctness, vegan < heavy-meat diet, electric < petrol car, long > short flight, recycleAll < recycleNone |
 | **Actions Data** | Structure integrity, no duplicate IDs, savings accumulation |
 | **Categories Data** | 5 correct categories, all required fields, hex colors |
 | **e2e-selectors** | Object is frozen, all sections present, no duplicate selector values, `sel()` output format |
-| **Security** | XSS payload battery through `escapeHTML`, corrupt localStorage data rejection |
+| **Security** | XSS payload battery through `escapeHTML`, corrupt localStorage data rejection, challengeId validation |
 
 ### Running the Tests
 
-The test runner requires ES modules to be served over HTTP (not `file://`).
+#### CLI (Vitest) — Recommended
+
+```bash
+npm test            # Run all tests once
+npm run test:watch  # Watch mode (re-runs on file changes)
+```
+
+#### In-Browser (Visual Runner)
 
 1. Start a local server from the project root:
    ```bash
@@ -102,6 +121,23 @@ EcoTrack has been hardened against the 5 key criteria:
 *   **Efficiency**: Event throttling, `IntersectionObserver` cleanup, and efficient DOM manipulations.
 *   **Testing**: Widespread use of `data-testid` attributes across all interactive elements for end-to-end testing readiness.
 *   **Accessibility (a11y)**: WCAG 2.1 compliant features including a skip-nav link, keyboard navigation support, high-contrast forced-colors mode, `prefers-reduced-motion` integration, and comprehensive ARIA roles, labels, and live announcements.
+
+## 🌍 Chosen Vertical
+EcoTrack targets the **environmental sustainability** vertical, specifically helping individuals understand and reduce their personal carbon footprint.
+
+## 🧭 Approach & Logic
+- **Modular Vanilla JS architecture**: All functionality is split into clear ES modules (`utils`, `storage`, `calculator`, `actions`, etc.) with strict JSDoc typings.
+- **Client‑side only**: No backend; all data lives in `localStorage` ensuring privacy and instant feedback.
+- **Data flow**: User inputs fuel, diet, travel, etc. → `calculator` computes emissions → `storage` persists profile & history → UI updates charts via Chart.js.
+- **Action recommendation engine**: Calculates potential CO₂ savings for each action and ranks them dynamically.
+- **Gamified challenges**: Streak tracking, achievements, and pledge system encourage sustained behavior change.
+- **Accessibility & Security by design**: CSP, XSS sanitization, ARIA roles, keyboard navigation, and thorough input validation.
+
+## 🤔 Assumptions
+- Users run the app in a modern browser supporting ES modules and `localStorage`.
+- Data is stored locally; no cross‑device sync is provided.
+- Emission factor values are static and sourced from reputable public datasets (IPCC, EPA).
+- The test runner is executed via a simple static server (e.g., `npx http-server`).
 
 ## 📄 License
 

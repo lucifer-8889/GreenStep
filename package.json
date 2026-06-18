@@ -1,0 +1,19 @@
+{
+  "name": "ecotrack",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EcoTrack — Carbon Footprint Awareness Platform",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "serve": "npx http-server ./ -p 5500 -c-1 --cors"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.1",
+    "jsdom": "^26.1.0"
+  },
+  "keywords": ["carbon-footprint", "sustainability", "eco-tracker", "CO2-calculator"],
+  "license": "MIT"
+}

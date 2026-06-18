@@ -258,8 +258,6 @@ export function createSafeElement(tag, attrs = {}, textContent = '') {
       el.className = value;
     } else if (key === 'style' && typeof value === 'object') {
       Object.assign(el.style, value);
-    } else if (key.startsWith('data-') || key.startsWith('aria-') || key === 'role' || key === 'id' || key === 'tabindex' || key === 'for' || key === 'type') {
-      el.setAttribute(key, String(value));
     } else {
       el.setAttribute(key, String(value));
     }
