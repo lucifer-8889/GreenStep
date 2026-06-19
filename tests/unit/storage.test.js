@@ -308,3 +308,108 @@ describe('clearAll', () => {
     expect(getProfile()).toBeNull();
   });
 });
+
+// ─── Security: Input Validation ──────────────────────────────────────────────
+
+describe('toggleAction — input validation', () => {
+  it('rejects non-string actionId', () => {
+    const result = toggleAction(123);
+    expect(result).toEqual([]);
+  });
+
+  it('rejects empty string actionId', () => {
+    const result = toggleAction('');
+    expect(result).toEqual([]);
+  });
+
+  it('rejects excessively long actionId', () => {
+    const result = toggleAction('a'.repeat(200));
+    expect(result).toEqual([]);
+  });
+});
+
+describe('unlockAchievement — input validation', () => {
+  it('rejects non-string achievementId', () => {
+    expect(unlockAchievement(null)).toBe(false);
+  });
+
+  it('rejects empty string achievementId', () => {
+    expect(unlockAchievement('')).toBe(false);
+  });
+
+  it('rejects excessively long achievementId', () => {
+    expect(unlockAchievement('x'.repeat(200))).toBe(false);
+  });
+});
+
+describe('importData — prototype pollution protection', () => {
+  it('rejects data with __proto__ key', () => {
+    // Note: JSON.stringify strips __proto__, so we use a raw string
+    const malicious = '{"__proto__": {"isAdmin": true}}';
+    expect(importData(malicious)).toBe(false);
+  });
+
+  it('rejects data with constructor key', () => {
+    const malicious = JSON.stringify({ constructor: { prototype: {} } });
+    expect(importData(malicious)).toBe(false);
+  });
+
+  it('rejects data with prototype key', () => {
+    const malicious = JSON.stringify({ prototype: {} });
+    expect(importData(malicious)).toBe(false);
+  });
+});
+
+describe('importData — imported profile validation', () => {
+  it('skips invalid profile during import', () => {
+    const data = JSON.stringify({ profile: { total: 'not-a-number', categories: {} } });
+    const result = importData(data);
+    expect(result).toBe(true); // import succeeds overall
+    expect(getProfile()).toBeNull(); // but invalid profile is not written
+  });
+
+  it('skips non-array pledges during import', () => {
+    const data = JSON.stringify({ pledges: 'not-an-array' });
+    const result = importData(data);
+    expect(result).toBe(true);
+    expect(getPledges()).toEqual([]);
+  });
+});
+
+describe('completeChallenge — log capping', () => {
+  it('rejects non-string challengeId', () => {
+    const result = completeChallenge(42);
+    expect(result.currentStreak).toBe(0);
+  });
+
+  it('rejects empty string challengeId', () => {
+    const result = completeChallenge('');
+    expect(result.currentStreak).toBe(0);
+  });
+});
+
+describe('isValidProfile — rejects unexpected category keys', () => {
+  it('rejects profile with unknown category keys', () => {
+    localStorage.setItem('ecotrack_profile', JSON.stringify({
+      total: 5000,
+      categories: { transport: 1000, energy: 500, diet: 500, shopping: 500, waste: 500, malicious: 9999 }
+    }));
+    expect(getProfile()).toBeNull();
+  });
+
+  it('rejects profile with negative total', () => {
+    localStorage.setItem('ecotrack_profile', JSON.stringify({
+      total: -100,
+      categories: { transport: 1000 }
+    }));
+    expect(getProfile()).toBeNull();
+  });
+
+  it('rejects profile with unreasonably large total', () => {
+    localStorage.setItem('ecotrack_profile', JSON.stringify({
+      total: 9_999_999,
+      categories: { transport: 1000 }
+    }));
+    expect(getProfile()).toBeNull();
+  });
+});

@@ -156,7 +156,7 @@ export function handleInput(fieldId, value, unit) {
     display.textContent = `${value} ${escapeHTML(unit)}`;
   }
 
-  // Invalidate memoized emissions
+  // Invalidate memoized emissions on any input change
   _lastInputsKey = null;
 
   updateLiveTotal();
@@ -183,9 +183,9 @@ function calculateEmissions() {
   if (carType !== 'none' && EMISSION_FACTORS.transport[carType]) {
     result.transport += carKm * EMISSION_FACTORS.transport[carType] / 52;
   }
-  result.transport += (inputs.publicTransitKm || 0) * EMISSION_FACTORS.transport.publicTransit / 52;
-  result.transport += (inputs.shortFlights || 0) * EMISSION_FACTORS.transport.shortFlight;
-  result.transport += (inputs.longFlights || 0) * EMISSION_FACTORS.transport.longFlight;
+  result.transport += safeNumber(inputs.publicTransitKm, 0, 0, 100000) * EMISSION_FACTORS.transport.publicTransit / 52;
+  result.transport += safeNumber(inputs.shortFlights, 0, 0, 100) * EMISSION_FACTORS.transport.shortFlight;
+  result.transport += safeNumber(inputs.longFlights, 0, 0, 100) * EMISSION_FACTORS.transport.longFlight;
 
   // Energy
   const elec = safeNumber(inputs.electricityKwh, 0, 0, 10000) * EMISSION_FACTORS.energy.electricity / 12;
@@ -197,7 +197,7 @@ function calculateEmissions() {
   if (solar === 'partial') energyTotal *= 0.7;
   else if (solar === 'full') energyTotal *= 0.3;
 
-  const household = inputs.householdSize || 1;
+  const household = safeNumber(inputs.householdSize, 1, 1, 20);
   result.energy = energyTotal / household;
 
   // Diet — Security: validate dietType enum
@@ -215,9 +215,9 @@ function calculateEmissions() {
   const wasteMultiplier = { high: 1.2, medium: 1, low: 0.85, none: 0.75 };
   result.diet *= (wasteMultiplier[foodWaste] || 1);
 
-  // Shopping
-  const clothingItems = inputs.clothingItems || 0;
-  const electronics = inputs.electronicsYear || 0;
+  // Shopping — Security: validate all numeric inputs
+  const clothingItems = safeNumber(inputs.clothingItems, 0, 0, 100);
+  const electronics = safeNumber(inputs.electronicsYear, 0, 0, 50);
   result.shopping = clothingItems * 7 * 12 + electronics * 50; // rough per-item estimates
 
   const validShoppingHabit = ['new', 'mixed', 'secondhand', 'minimal'];

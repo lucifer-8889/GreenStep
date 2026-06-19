@@ -179,7 +179,8 @@ function startFactCarousel() {
  * @param {number} index - Fact index to display
  */
 export function goToFact(index) {
-  if (index < 0 || index >= ECO_FACTS.length) return;
+  // Security: validate index is a non-negative integer within bounds
+  if (!Number.isInteger(index) || index < 0 || index >= ECO_FACTS.length) return;
   currentFact = index;
 
   const track = document.getElementById('facts-track');

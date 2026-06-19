@@ -60,6 +60,9 @@ function set(key, data) {
 
 // ─── Schema Validation Helpers ───────────────────────────────────────
 
+/** @type {number} Maximum allowed length for string IDs to prevent abuse */
+const MAX_ID_LENGTH = 128;
+
 /** @type {string[]} Expected category keys in a profile */
 const VALID_CATEGORIES = ['transport', 'energy', 'diet', 'shopping', 'waste'];
 
@@ -73,7 +76,11 @@ const VALID_CATEGORIES = ['transport', 'energy', 'diet', 'shopping', 'waste'];
 function isValidProfile(profile) {
   if (!profile || typeof profile !== 'object' || Array.isArray(profile)) return false;
   if (typeof profile.total !== 'number' || !Number.isFinite(profile.total)) return false;
+  if (profile.total < 0 || profile.total > 1_000_000) return false; // Security: reject unreasonable values
   if (!profile.categories || typeof profile.categories !== 'object') return false;
+  // Security: reject if categories has unexpected keys (prototype pollution guard)
+  const categoryKeys = Object.keys(profile.categories);
+  if (categoryKeys.some(k => !VALID_CATEGORIES.includes(k))) return false;
   // Ensure each category value is a finite number
   for (const key of VALID_CATEGORIES) {
     if (profile.categories[key] !== undefined && (typeof profile.categories[key] !== 'number' || !Number.isFinite(profile.categories[key]))) {
@@ -90,10 +97,22 @@ function isValidProfile(profile) {
  */
 function isValidPledge(pledge) {
   if (!pledge || typeof pledge !== 'object') return false;
-  if (typeof pledge.id !== 'string' || pledge.id.length === 0) return false;
-  if (typeof pledge.text !== 'string') return false;
+  if (typeof pledge.id !== 'string' || pledge.id.length === 0 || pledge.id.length > MAX_ID_LENGTH) return false;
+  if (typeof pledge.text !== 'string' || pledge.text.length > 500) return false; // Security: cap text length
   if (typeof pledge.savingsKg !== 'number' || !Number.isFinite(pledge.savingsKg)) return false;
+  if (pledge.savingsKg < 0 || pledge.savingsKg > 100_000) return false; // Security: reject unreasonable values
   return true;
+}
+
+/**
+ * Validates that a string ID is non-empty and within length limits.
+ * Security: prevents abuse via excessively long or non-string IDs.
+ *
+ * @param {*} id - Value to validate as a string ID
+ * @returns {boolean} true if the ID is a valid non-empty string within limits
+ */
+function isValidId(id) {
+  return typeof id === 'string' && id.length > 0 && id.length <= MAX_ID_LENGTH;
 }
 
 /**
@@ -210,7 +229,7 @@ export function getStreakData() {
  * @returns {{ currentStreak: number, longestStreak: number, lastDate: string, totalCompleted: number }}
  */
 export function completeChallenge(challengeId) {
-  if (typeof challengeId !== 'string' || challengeId.length === 0) {
+  if (!isValidId(challengeId)) {
     console.warn('[EcoTrack] Invalid challengeId rejected.');
     return getStreakData();
   }
@@ -222,6 +241,8 @@ export function completeChallenge(challengeId) {
   // Log challenge
   const log = getChallengeLog();
   log.push({ id: challengeId, date: today });
+  // Efficiency: cap log to 365 entries to prevent unbounded growth
+  if (log.length > 365) log.splice(0, log.length - 365);
   set(KEYS.challengeLog, log);
 
   // Update streak
@@ -276,6 +297,11 @@ export function getAdoptedActions() {
  * @returns {string[]} Updated list of adopted action IDs
  */
 export function toggleAction(actionId) {
+  // Security: validate actionId is a non-empty string
+  if (!isValidId(actionId)) {
+    console.warn('[EcoTrack] Invalid actionId rejected.');
+    return getAdoptedActions();
+  }
   const adopted = getAdoptedActions();
   const idx = adopted.indexOf(actionId);
   if (idx >= 0) {
@@ -301,6 +327,11 @@ export function getUnlockedAchievements() {
  * @returns {boolean} true if newly unlocked, false if already existed
  */
 export function unlockAchievement(achievementId) {
+  // Security: validate achievementId is a non-empty string
+  if (!isValidId(achievementId)) {
+    console.warn('[EcoTrack] Invalid achievementId rejected.');
+    return false;
+  }
   const unlocked = getUnlockedAchievements();
   if (!unlocked.includes(achievementId)) {
     unlocked.push(achievementId);
@@ -330,16 +361,39 @@ export function exportData() {
  */
 export function importData(jsonString) {
   try {
+    // Security: reject excessively large payloads (> 1 MB)
+    if (typeof jsonString !== 'string' || jsonString.length > 1_048_576) {
+      console.warn('[EcoTrack] Import rejected: payload too large or not a string.');
+      return false;
+    }
     const data = JSON.parse(jsonString);
     // Security: only accept plain objects at top level
     if (typeof data !== 'object' || data === null || Array.isArray(data)) {
       console.warn('[EcoTrack] Import rejected: invalid data structure.');
       return false;
     }
+    // Security: reject objects with __proto__ or constructor keys (prototype pollution)
+    const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+    if (Object.keys(data).some(k => dangerousKeys.includes(k))) {
+      console.warn('[EcoTrack] Import rejected: dangerous keys detected.');
+      return false;
+    }
     const validKeys = new Set(Object.keys(KEYS));
     Object.entries(data).forEach(([name, value]) => {
       // Only write recognized keys
       if (validKeys.has(name) && KEYS[name]) {
+        // Security: validate profile structure before writing
+        if (name === 'profile' && value !== null && !isValidProfile(value)) {
+          console.warn('[EcoTrack] Import: skipping invalid profile data.');
+          return;
+        }
+        // Security: validate arrays are actually arrays
+        if (['pledges', 'achievements', 'adoptedActions', 'challengeLog', 'history'].includes(name)) {
+          if (value !== null && !Array.isArray(value)) {
+            console.warn(`[EcoTrack] Import: skipping invalid ${name} data (expected array).`);
+            return;
+          }
+        }
         set(KEYS[name], value);
       }
     });

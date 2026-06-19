@@ -89,6 +89,12 @@ export function renderPledges() {
  * @param {string} pledgeId - Pledge identifier
  */
 export function handleTogglePledge(pledgeId) {
+  // Security: validate pledgeId is a known PLEDGE_OPTIONS id
+  if (typeof pledgeId !== 'string' || !PLEDGE_OPTIONS.some(o => o.id === pledgeId)) {
+    console.warn('[EcoTrack] Unknown pledge ID rejected:', pledgeId);
+    return;
+  }
+
   const existing = getPledges();
   const isActive = existing.some(p => p.id === pledgeId);
 
@@ -125,9 +131,15 @@ export function handleTogglePledge(pledgeId) {
 
 /**
  * Removes a pledge by ID and re-renders.
+ * Security: validates pledgeId is a known PLEDGE_OPTIONS id.
  * @param {string} pledgeId - Pledge identifier
  */
 export function handleRemovePledge(pledgeId) {
+  // Security: validate pledgeId is a known PLEDGE_OPTIONS id
+  if (typeof pledgeId !== 'string' || !PLEDGE_OPTIONS.some(o => o.id === pledgeId)) {
+    console.warn('[EcoTrack] Unknown pledge ID rejected:', pledgeId);
+    return;
+  }
   removePledge(pledgeId);
   // Dispatch event for consistent analytics/tracking
   const pledges = getPledges();

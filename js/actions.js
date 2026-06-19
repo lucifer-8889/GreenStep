@@ -138,6 +138,12 @@ function renderActionCard(action, isAdopted) {
  * @param {string} category - Category ID or 'all'
  */
 export function filterActions(category) {
+  // Security: validate category is a known value or 'all'
+  const validCategories = ['all', ...CATEGORIES.map(c => c.id)];
+  if (!validCategories.includes(category)) {
+    console.warn('[EcoTrack] Invalid action filter category, defaulting to "all".');
+    category = 'all';
+  }
   currentFilter = category;
   renderActions();
   // Accessibility: announce filter change with result count
@@ -153,6 +159,11 @@ export function filterActions(category) {
  * @param {string} actionId - Action identifier
  */
 export function handleToggleAction(actionId) {
+  // Security: validate actionId exists in ACTIONS before toggling
+  if (!ACTIONS.some(a => a.id === actionId)) {
+    console.warn('[EcoTrack] Unknown actionId rejected:', actionId);
+    return;
+  }
   toggleAction(actionId);
 
   const adopted = getAdoptedActions();
